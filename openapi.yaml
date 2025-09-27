@@ -1,0 +1,122 @@
+openapi: 3.0.3
+info:
+  title: PlanMaster 365 (Graph subset)
+  version: 1.0.0
+servers:
+  - url: https://graph.microsoft.com/v1.0
+security:
+  - oauth2: [offline_access, User.Read, Mail.ReadWrite, Mail.Send, Tasks.ReadWrite, Calendars.ReadWrite, MailboxSettings.Read]
+components:
+  securitySchemes:
+    oauth2:
+      type: oauth2
+      flows:
+        authorizationCode:
+          authorizationUrl: https://login.microsoftonline.com/common/oauth2/v2.0/authorize
+          tokenUrl: https://login.microsoftonline.com/common/oauth2/v2.0/token
+          scopes:
+            offline_access: Refresh tokens
+            User.Read: Read basic profile
+            Mail.ReadWrite: Read and write user mail
+            Mail.Send: Send mail
+            Tasks.ReadWrite: Read and write tasks (To Do)
+            Calendars.ReadWrite: Read and write calendar events
+            MailboxSettings.Read: Read mailbox settings (timezone, working hours)
+paths:
+  /me/mailboxSettings:
+    get:
+      operationId: getMailboxSettings
+      summary: Obtener zona horaria y workingHours
+      responses:
+        '200': { description: OK }
+  /me/messages:
+    get:
+      operationId: listMail
+      summary: Listar correos
+      parameters:
+        - name: $search
+          in: query
+          schema: { type: string }
+        - name: ConsistencyLevel
+          in: header
+          schema: { type: string, enum: [eventual] }
+          description: Required when using $search
+      responses:
+        '200': { description: OK }
+  /me/messages/{id}:
+    patch:
+      operationId: updateMailCategories
+      summary: Actualizar categorías del correo
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: { type: string }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                categories:
+                  type: array
+                  items: { type: string }
+      responses:
+        '200': { description: OK }
+  /me/sendMail:
+    post:
+      operationId: sendMail
+      summary: Enviar correo
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                message: { type: object }
+                saveToSentItems: { type: boolean }
+      responses:
+        '202': { description: Accepted }
+  /me/tasks:
+    get:
+      operationId: listTasks
+      summary: Listar tareas de To Do
+      responses:
+        '200': { description: OK }
+    post:
+      operationId: createTask
+      summary: Crear tarea en To Do
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                title: { type: string }
+                dueDateTime: { type: object }
+      responses:
+        '201': { description: Created }
+  /me/events:
+    get:
+      operationId: listEvents
+      summary: Listar eventos del calendario
+      responses:
+        '200': { description: OK }
+    post:
+      operationId: createEvent
+      summary: Crear evento en calendario
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                subject: { type: string }
+                start: { type: object }
+                end: { type: object }
+      responses:
+        '201': { description: Created }
